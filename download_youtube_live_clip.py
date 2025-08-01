@@ -5,6 +5,7 @@ def download_video(url):
         # yt-dlp 옵션 설정
         ydl_opts = {
             'format': 'bestvideo',  # 또는 'bestaudio'로 변경
+            'outtmpl': '~/Movies/%(title)s.%(ext)s',  # 다운로드 경로 설정
             'progress_hooks': [lambda d: print(f'다운로드 진행률: {d["_percent_str"]}')],
         }
         
