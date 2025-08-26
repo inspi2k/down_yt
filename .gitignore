@@ -1,4 +1,4 @@
-prj-venv/
+.venv/
 
 *.mp4
 *.webm
