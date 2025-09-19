@@ -1,11 +1,20 @@
+import os
+import sys
 from yt_dlp import YoutubeDL
 
 def download_video(url):
     try:
         # yt-dlp 옵션 설정
+        if sys.platform == 'darwin':  # macOS
+            download_path = os.path.expanduser('~/Movies/%(title)s.%(ext)s')
+        elif sys.platform == 'win32':  # Windows
+            download_path = os.path.join(os.environ['USERPROFILE'], 'Videos', '%(title)s.%(ext)s')
+        else:  # Other OS (e.g., Linux)
+            download_path = os.path.expanduser('~/Videos/%(title)s.%(ext)s')
+
         ydl_opts = {
-            'format': 'bestvideo',  # 또는 'bestaudio'로 변경
-            'outtmpl': '~/Movies/%(title)s.%(ext)s',  # 다운로드 경로 설정
+            'format': 'bestvideo+bestaudio/best',  # 최고 화질 비디오와 오디오를 병합하여 다운로드, 또는 가능한 최고 화질
+            'outtmpl': download_path,  # 다운로드 경로 설정
             'progress_hooks': [lambda d: print(f'다운로드 진행률: {d["_percent_str"]}')],
         }
         
