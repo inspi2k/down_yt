@@ -37,7 +37,7 @@ def download_video(url):
             # HTTP 403 오류 해결을 위한 옵션들
             'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'referer': 'https://www.youtube.com/',
-            'cookiesfrombrowser': ('chrome',),  # Chrome 쿠키 사용 (선택사항)
+            # 'cookiesfrombrowser': ('chrome',),  # DPAPI 오류 방지를 위해 주석 처리
             'extractor_retries': 3,  # 추출기 재시도 횟수
             'fragment_retries': 3,   # 프래그먼트 재시도 횟수
             'retries': 3,            # 전체 재시도 횟수
@@ -78,7 +78,30 @@ def download_video(url):
                 print(f"다운로드 완료: {info['title']}")
         except Exception as first_error:
             err_msg = str(first_error)
-            if 'Requested format is not available' in err_msg:
+            if 'Failed to decrypt with DPAPI' in err_msg:
+                print("DPAPI 오류가 발생했습니다. 쿠키 없이 재시도합니다...")
+                # DPAPI 오류 해결을 위한 옵션 (쿠키 사용 안함)
+                dpapi_fix_opts = {
+                    'format': 'best',
+                    'outtmpl': download_path,
+                    'progress_hooks': [lambda d: print(f'다운로드 진행률: {d["_percent_str"]}')],
+                    'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'referer': 'https://www.youtube.com/',
+                    'extractor_retries': 3,
+                    'fragment_retries': 3,
+                    'retries': 3,
+                    'sleep_interval': 1,
+                    'max_sleep_interval': 5,
+                    # 쿠키 관련 옵션 제거
+                }
+                try:
+                    with YoutubeDL(dpapi_fix_opts) as ydl:
+                        info = ydl.extract_info(url, download=True)
+                        print(f"다운로드 완료: {info['title']}")
+                except Exception as dpapi_error:
+                    print(f"DPAPI 오류 해결 시도도 실패했습니다: {str(dpapi_error)}")
+                    raise
+            elif 'Requested format is not available' in err_msg:
                 print("요청한 포맷이 없어 'best' 포맷으로 한 번 더 시도합니다...")
                 # 포맷을 더 보편적인 값으로 재시도
                 retry_opts = dict(ydl_opts)
